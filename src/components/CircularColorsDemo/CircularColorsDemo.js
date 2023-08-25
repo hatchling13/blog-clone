@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 import clsx from 'clsx';
 import {
@@ -5,6 +7,7 @@ import {
   Pause,
   RotateCcw,
 } from 'react-feather';
+import { motion } from "framer-motion"
 
 import Card from '@/components/Card';
 import VisuallyHidden from '@/components/VisuallyHidden';
@@ -18,12 +21,36 @@ const COLORS = [
 ];
 
 function CircularColorsDemo() {
-  // TODO: This value should increase by 1 every second:
-  const timeElapsed = 0;
+  const id = React.useId();
+  
+  // idle | playing
+  const [status, setStatus] = React.useState('idle')
+  const [timeElapsed, setTimeElapsed] = React.useState(0);
 
-  // TODO: This value should cycle through the colors in the
-  // COLORS array:
-  const selectedColor = COLORS[0];
+  const selectedColor = COLORS[timeElapsed % COLORS.length];
+
+  React.useEffect(() => {
+    if (status === 'playing') {
+      const timerId = setInterval(() => setTimeElapsed(t => t + 1), 1000);
+
+      return () => {
+        clearInterval(timerId)
+      }
+    }
+  }, [status])
+
+  function handleButtonClick() {
+    if (status === 'idle') {
+      setStatus('playing');
+    } else {
+      setStatus('idle');
+    }
+  }
+
+  function handleResetClick() {
+    setStatus('idle');
+    setTimeElapsed(0);
+  }
 
   return (
     <Card as="section" className={styles.wrapper}>
@@ -33,12 +60,18 @@ function CircularColorsDemo() {
             color.value === selectedColor.value;
 
           return (
-            <li
+            <li              
               className={styles.color}
               key={index}
             >
               {isSelected && (
-                <div
+                <motion.div
+                  layoutId="selected"
+                  transition={{
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 40
+                  }}
                   className={
                     styles.selectedColorOutline
                   }
@@ -69,11 +102,22 @@ function CircularColorsDemo() {
           <dd>{timeElapsed}</dd>
         </dl>
         <div className={styles.actions}>
-          <button>
-            <Play />
-            <VisuallyHidden>Play</VisuallyHidden>
+          <button onClick={handleButtonClick}>
+            {
+              status === "idle" ? (
+                <>
+                  <Play />
+                  <VisuallyHidden>Play</VisuallyHidden>
+                </>
+              ) : (
+                <>
+                  <Pause />
+                  <VisuallyHidden>Pause</VisuallyHidden>
+                </>
+              )
+            }
           </button>
-          <button>
+          <button onClick={handleResetClick}>
             <RotateCcw />
             <VisuallyHidden>Reset</VisuallyHidden>
           </button>
